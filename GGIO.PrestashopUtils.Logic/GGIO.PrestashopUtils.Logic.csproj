@@ -4,4 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ClosedXML.Signed" Version="0.95.3" />
+    <PackageReference Include="PrestaSharp" Version="1.2.8" />
+  </ItemGroup>
+
 </Project>
