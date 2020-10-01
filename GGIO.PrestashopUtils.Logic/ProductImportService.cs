@@ -29,9 +29,16 @@ namespace GGIO.PrestashopUtils.Logic
 
                 foreach (var row in workbook.Worksheets.First().Rows().Skip(1))
                 {
+                    if (string.IsNullOrWhiteSpace(row.Cell(1).GetString()))
+                    {
+                        return;
+                    }
+
                     int index = 1;
                     var product = new product();
                     product.id_shop_default = shopId;
+                    product.active = 1;
+                    product.state = 1;
 
                     //A
                     product.AddName(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = 1, Value = row.Cell(index++).GetValue<string>() });
@@ -49,20 +56,19 @@ namespace GGIO.PrestashopUtils.Logic
                     //G
                     product.reference = row.Cell(index++).GetValue<string>();
                     //H
-                    product.minimal_quantity = row.Cell(index++).GetValue<int>();
+                    var quantity = row.Cell(index++).GetValue<int>();
+                    product.minimal_quantity = quantity;
 
                     //I
                     product.price = row.Cell(index++).GetValue<decimal>();
                     //J
-                    index++;
+                    index++; 
                     //K
                     product.id_tax_rules_group = row.Cell(index++).GetValue<int>();
 
                     //L
                     int categoryId = row.Cell(index++).GetValue<int>();
-                    product.id_category_default = categoryId;
-                    product.associations.categories.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.category(categoryId));
-                    product.position_in_category = 0;
+
 
                     //M
                     index++;
@@ -111,7 +117,7 @@ namespace GGIO.PrestashopUtils.Logic
                     index++;
 
                     //AD
-                    product.state = row.Cell(index++).GetValue<int>();
+                    product.condition = row.Cell(index++).GetValue<string>();
 
                     //AE
                     product.show_condition = row.Cell(index++).GetValue<int>();
@@ -119,7 +125,23 @@ namespace GGIO.PrestashopUtils.Logic
                     //AF
                     product.ean13 = row.Cell(index++).GetValue<string>();
 
-                    await ProductClient.AddAsync(product);
+                    var newProduct = await ProductClient.AddAsync(product);
+                    newProduct = await ProductClient.GetAsync(newProduct.id.Value);
+
+                    newProduct.id_category_default = categoryId;
+                    if (newProduct.associations.categories.Any())
+                    {
+                        newProduct.associations.categories.Clear();
+                    }
+                    newProduct.associations.categories.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.category(categoryId));
+                    newProduct.position_in_category = 0;
+                    newProduct.id_shop_default = shopId;
+                    //newProduct.associations.stock_availables => à lire et mettre à jour
+                    //sav.id_shop = shopId
+                    //quantity
+                    //location
+                  
+                    await ProductClient.UpdateAsync(newProduct);
 
                 }
             }
