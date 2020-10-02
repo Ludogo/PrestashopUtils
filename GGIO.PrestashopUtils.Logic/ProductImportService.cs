@@ -10,12 +10,12 @@ namespace GGIO.PrestashopUtils.Logic
     public class ProductImportService
     {
         public ProductFactory ProductClient { get; }
-        public CategoryFactory CategoryFactory { get; }
-        public ProductImportService(ProductFactory productClient, CategoryFactory categoryFactory)
-        {
-            this.CategoryFactory = categoryFactory;
-            this.ProductClient = productClient;
+        public StockAvailableFactory StockClient { get; }
 
+        public ProductImportService(ProductFactory productClient, StockAvailableFactory stockClient)
+        {
+            this.StockClient = stockClient;
+            this.ProductClient = productClient;
         }
 
         public ProductImportService()
@@ -62,7 +62,7 @@ namespace GGIO.PrestashopUtils.Logic
                     //I
                     product.price = row.Cell(index++).GetValue<decimal>();
                     //J
-                    index++; 
+                    index++;
                     //K
                     product.id_tax_rules_group = row.Cell(index++).GetValue<int>();
 
@@ -136,12 +136,22 @@ namespace GGIO.PrestashopUtils.Logic
                     newProduct.associations.categories.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.category(categoryId));
                     newProduct.position_in_category = 0;
                     newProduct.id_shop_default = shopId;
-                    //newProduct.associations.stock_availables => à lire et mettre à jour
-                    //sav.id_shop = shopId
-                    //quantity
-                    //location
-                  
+
                     await ProductClient.UpdateAsync(newProduct);
+
+                    var productStockAvailable = newProduct.associations.stock_availables.FirstOrDefault();
+                    if (productStockAvailable != null)
+                    {
+                        var stockAvailable = await StockClient.GetAsync(productStockAvailable.id);
+                        stockAvailable.id_shop = shopId;
+                        stockAvailable.location = product.location;
+                        stockAvailable.quantity = quantity;
+
+                        await StockClient.UpdateAsync(stockAvailable);
+                    }
+
+                    
+
 
                 }
             }
