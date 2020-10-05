@@ -6,7 +6,10 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML.Signed" Version="0.95.3" />
-    <PackageReference Include="PrestaSharp" Version="1.2.8" />
+    <PackageReference Include="RestSharp" Version="106.11.4" />
+    <Reference Include="Bukimedia.PrestaSharp.dll">
+      <HintPath>/home/ludo/Dev/PrestaSharp/PrestaSharp/bin/Debug/netstandard2.0/Bukimedia.PrestaSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

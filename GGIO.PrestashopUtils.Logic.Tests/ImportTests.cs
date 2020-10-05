@@ -14,8 +14,8 @@ namespace GGIO.PrestashopUtils.Logic.Tests
         {
             string url = "https://poubelle.boutique.coop/api";
             string account = "CLEQ2RIEPIN53WP4GSMBNFU1RRTRD8AK";
-            var productFactory = new Bukimedia.PrestaSharp.Factories.ProductFactory(url, account, string.Empty);
-            var stockFactory = new Bukimedia.PrestaSharp.Factories.StockAvailableFactory(url, account, string.Empty);
+            var productFactory = new Bukimedia.PrestaSharp.Factories.ProductFactory(url, account, string.Empty,5);
+            var stockFactory = new Bukimedia.PrestaSharp.Factories.StockAvailableFactory(url, account, string.Empty,5);
 
             var service = new ProductImportService(productFactory, stockFactory);
 
