@@ -195,9 +195,9 @@ namespace GGIO.PrestashopUtils.Logic
                         }
 
                     }
-                    catch (Exception ex)
+                    catch (Exception )
                     {
-
+                        
                     }
                 }
             }
