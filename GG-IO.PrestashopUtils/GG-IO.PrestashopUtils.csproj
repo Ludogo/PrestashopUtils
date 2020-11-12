@@ -1,9 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>GG_IO.PrestashopUtils</RootNamespace>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.10" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GGIO.PrestashopUtils.Abstraction\GGIO.PrestashopUtils.Abstraction.csproj" />
+    <ProjectReference Include="..\GGIO.PrestashopUtils.Logic\GGIO.PrestashopUtils.Logic.csproj" />
+    <Reference Include="Bukimedia.PrestaSharp.dll">
+      <HintPath>/home/ludo/Dev/PrestaSharp/PrestaSharp/bin/Debug/netstandard2.0/Bukimedia.PrestaSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
