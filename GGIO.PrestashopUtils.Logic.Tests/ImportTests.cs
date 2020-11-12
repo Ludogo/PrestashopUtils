@@ -2,7 +2,9 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Bukimedia.PrestaSharp.Factories;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace GGIO.PrestashopUtils.Logic.Tests
 {
@@ -17,9 +19,9 @@ namespace GGIO.PrestashopUtils.Logic.Tests
             var productFactory = new Bukimedia.PrestaSharp.Factories.ProductFactory(url, account, string.Empty,5);
             var stockFactory = new Bukimedia.PrestaSharp.Factories.StockAvailableFactory(url, account, string.Empty,5);
 
-            var service = new ProductImportService(productFactory, stockFactory);
+            var service = new ProductImportService(productFactory, stockFactory, Mock.Of<ILogger<ProductImportService>>());
 
-            await service.ImportAsync(File.Open("/home/ludo/Dev/PrestashopUtils/Test Import Presta M20S.xlsx", FileMode.Open), 5);
+            await service.ImportAsync(File.Open("/home/ludo/Dev/PrestashopUtils/Test Import Presta M20S.xlsx", FileMode.Open), 5, 1);
         }
     }
 }

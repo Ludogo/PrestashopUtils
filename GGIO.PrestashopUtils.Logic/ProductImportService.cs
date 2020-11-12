@@ -1,20 +1,26 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Bukimedia.PrestaSharp.Entities;
 using Bukimedia.PrestaSharp.Factories;
 using ClosedXML;
 using ClosedXML.Excel;
+using GGIO.PrestashopUtils.Abstraction;
+using Microsoft.Extensions.Logging;
 
 namespace GGIO.PrestashopUtils.Logic
 {
-    public class ProductImportService
+    
+    public class ProductImportService : IProductImportService
     {
-        public ProductFactory ProductClient { get; }
-        public StockAvailableFactory StockClient { get; }
+        private ProductFactory ProductClient { get; }
+        private StockAvailableFactory StockClient { get; }
+        private ILogger<ProductImportService> Logger { get; }
 
-        public ProductImportService(ProductFactory productClient, StockAvailableFactory stockClient)
+        public ProductImportService(ProductFactory productClient, StockAvailableFactory stockClient, ILogger<ProductImportService> logger)
         {
+            this.Logger = logger;
             this.StockClient = stockClient;
             this.ProductClient = productClient;
         }
@@ -25,7 +31,7 @@ namespace GGIO.PrestashopUtils.Logic
 
 
 
-        public async Task ImportAsync(System.IO.Stream file, int shopId)
+        public async Task ImportAsync(System.IO.Stream file, int shopId, int languageId)
         {
             using (var workbook = new XLWorkbook(file))
             {
@@ -48,9 +54,9 @@ namespace GGIO.PrestashopUtils.Logic
                         product.state = 1;
 
                         //A
-                        product.AddName(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = 1, Value = row.Cell(index++).GetValue<string>() });
+                        product.AddName(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = languageId, Value = row.Cell(index++).GetValue<string>() });
                         //B
-                        product.description.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = 1, Value = row.Cell(index++).GetValue<string>() });
+                        product.description.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = languageId, Value = row.Cell(index++).GetValue<string>() });
                         //C //D
                         if (TryGetValue<int>(row, ref index, out var featureId))
                         {
@@ -93,81 +99,79 @@ namespace GGIO.PrestashopUtils.Logic
                         int categoryId = row.Cell(index++).GetValue<int>();
 
                         //L 
-                        index ++;
+                        index++;
                         //M
                         index++;
                         //N
-                        index++;
+                        product.location = row.Cell(index++).GetValue<string>();
                         //O
                         index++;
                         //P
-                        product.location = row.Cell(index++).GetValue<string>();
-                        //Q
-                        index++;
-                        //R
                         if (TryGetValue<decimal>(row, ref index, out var width))
                         {
                             product.width = width;
                         }
-
-                        //S
+                        //Q
                         if (TryGetValue<decimal>(row, ref index, out var heigth))
                         {
                             product.height = heigth;
                         }
-
-                        //T
+                        //R
                         if (TryGetValue<decimal>(row, ref index, out var depth))
                         {
                             product.depth = depth;
                         }
 
-                        //U
+                        //S
                         if (TryGetValue<decimal>(row, ref index, out var weight))
                         {
                             product.weight = weight;
                         }
 
+                        //T
+                        index++;
+
+                        //U
+                        index++; //taxe redondante
+
                         //V
-                        index++;
-
-                        //W
-                        index++;
-
-                        //X
                         if (TryGetValue<decimal>(row, ref index, out var wholeSale))
                         {
                             product.wholesale_price = wholeSale;
                         }
 
+                        //W
+                        index++;
+
+                        //X
+                        product.meta_title.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = languageId, Value = row.Cell(index++).GetValue<string>() });
+
                         //Y
-                        product.meta_title.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = 1, Value = row.Cell(index++).GetValue<string>() });
+                        var metaDescription = row.Cell(index++).GetValue<string>();
+                        product.AddLinkRewrite(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = languageId, Value = metaDescription });
+                        product.meta_keywords.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = languageId, Value = metaDescription });
 
                         //Z  
-                        var metaDescription = row.Cell(index++).GetValue<string>();
-                        product.AddLinkRewrite(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = 1, Value = metaDescription });
-                        product.meta_keywords.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = 1, Value = metaDescription });
-
+                        index++;
                         //AA
-                        product.meta_description.Add(new Bukimedia.PrestaSharp.Entities.AuxEntities.language { id = 1, Value = row.Cell(index++).GetValue<string>() });
-
-                        //AB
-                        index++;
-
-                        //AC
-                        index++;
-
-                        //AD
                         product.condition = row.Cell(index++).GetValue<string>();
 
-                        //AE
-                        if (TryGetValue<int>(row, ref index, out var showCondition))
+                        //AB
+                        if (TryGetValue<int>(row, ref index, out var active))
                         {
-                            product.show_condition = showCondition;
+                            product.active = active;
                         }
 
-                        //AF
+                        //AC
+                        if (TryGetValue<int>(row, ref index, out var conditionVisible))
+                        {
+                            product.show_condition = conditionVisible;
+                        }
+
+                        //AD
                         product.ean13 = row.Cell(index++).GetValue<string>();
+
+
 
                         var newProduct = await ProductClient.AddAsync(product);
                         newProduct = await ProductClient.GetAsync(newProduct.id.Value);
@@ -195,9 +199,9 @@ namespace GGIO.PrestashopUtils.Logic
                         }
 
                     }
-                    catch (Exception )
+                    catch (Exception ex)
                     {
-                        
+                        Logger.LogWarning(ex, $"Une erreur est survenu pour la ligne {row.Cell("A")} ");
                     }
                 }
             }
@@ -209,9 +213,9 @@ namespace GGIO.PrestashopUtils.Logic
             value = default(T);
             if (!string.IsNullOrEmpty(row.Cell(index).GetString()))
             {
-                ret = row.Cell(index++).TryGetValue<T>(out value);
+                ret = row.Cell(index).TryGetValue<T>(out value);
             }
-
+            index++;
             return ret;
         }
     }
